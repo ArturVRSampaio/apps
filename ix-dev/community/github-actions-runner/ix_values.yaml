@@ -1,0 +1,9 @@
+images:
+  image:
+    repository: myoung34/github-runner
+    tag: "2.338.2-ubuntu-noble"
+
+consts:
+  github_actions_runner_container_name: github-actions-runner
+  run_as_user: 0
+  run_as_group: 0

@@ -1,0 +1,58 @@
+app_version: 2.338.2
+capabilities:
+- description: GitHub Actions Runner is able to change file ownership arbitrarily
+  name: CHOWN
+- description: GitHub Actions Runner is able to bypass file permission checks
+  name: DAC_OVERRIDE
+- description: GitHub Actions Runner is able to bypass permission checks for file
+    operations
+  name: FOWNER
+- description: GitHub Actions Runner is able to send signals to any process
+  name: KILL
+- description: GitHub Actions Runner is able to set file capabilities on other files
+  name: SETFCAP
+- description: GitHub Actions Runner is able to change group ID of processes
+  name: SETGID
+- description: GitHub Actions Runner is able to transfer capabilities between processes
+  name: SETPCAP
+- description: GitHub Actions Runner is able to change user ID of processes
+  name: SETUID
+categories:
+- development
+changelog_url: https://github.com/actions/runner/releases
+date_added: '2026-11-16'
+description: A self-hosted GitHub Actions runner that registers itself to a repository,
+  organization or enterprise and runs workflow jobs on your TrueNAS system.
+home: https://docs.github.com/en/actions/hosting-your-own-runners
+host_mounts:
+- description: Docker socket
+  host_path: /var/run/docker.sock
+icon: https://media.sys.truenas.net/apps/github-actions-runner/icons/icon.svg
+keywords:
+- github
+- actions
+- runner
+- ci
+- cd
+lib_version: 2.3.19
+lib_version_hash: baa2e32ccdd8637a7604991b3f662e33c5ad10de47209b9fa8c6d2c2c916b5cf
+maintainers:
+- email: dev@truenas.com
+  name: truenas
+  url: https://www.truenas.com/
+name: github-actions-runner
+run_as_context:
+- description: Container [github-actions-runner] runs as root user and group.
+  gid: 0
+  group_name: Host group is [root]
+  uid: 0
+  user_name: Host user is [root]
+screenshots: []
+sources:
+- https://apps.truenas.com/catalog/github-actions-runner_community/
+- https://github.com/actions/runner
+- https://github.com/myoung34/docker-github-actions-runner
+- https://hub.docker.com/r/myoung34/github-runner
+title: GitHub Actions Runner
+train: community
+version: 1.0.0
