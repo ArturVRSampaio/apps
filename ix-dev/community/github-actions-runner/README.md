@@ -5,6 +5,9 @@ This app uses the [myoung34/github-runner](https://github.com/myoung34/docker-gi
 which registers itself to a repository, organization or enterprise using a personal access token.
 
 Target it from a workflow with **runs-on: [self-hosted, your-label]**.
+Jobs can use **container:** and Docker container actions: they run on the host's Docker daemon,
+and the work storage (which also holds the tool cache and a copy of the runner's Node.js runtimes)
+is mounted at the same path on the host and in the container so those jobs can reach it.
 Do not attach self-hosted runners to public repositories: a pull request from a fork could run arbitrary code on this system.
 
 <!-- x-readme:warnings:start -->

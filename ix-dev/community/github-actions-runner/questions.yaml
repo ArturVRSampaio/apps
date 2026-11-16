@@ -259,7 +259,9 @@ questions:
           description: |
             Where jobs check out code and write build files.</br>
             It is mounted inside the container at the same path as on the host,
-            so that job containers started through the Docker socket can see the files.
+            so that job containers started through the Docker socket can see the files.</br>
+            It also holds the tool cache and a copy of the runner's Node.js runtimes
+            (about 700 MB), which job containers need for JavaScript actions.
           schema:
             type: dict
             attrs:

@@ -5,8 +5,15 @@
 {# The image configures the runner as root. Jobs talk to the host's Docker daemon through the socket. #}
 {% do c1.set_user(values.consts.run_as_user, values.consts.run_as_group) %}
 {% do c1.add_caps(["CHOWN", "DAC_OVERRIDE", "FOWNER", "KILL", "SETGID", "SETUID", "SETPCAP", "SETFCAP"]) %}
-{# procps (pgrep) is not in the image, so look for the listener process through /proc #}
-{% do c1.healthcheck.set_custom_test(["CMD", "bash", "-c", "grep -qs Runner.Listener /proc/[0-9]*/cmdline"]) %}
+{#
+  procps (pgrep) is not in the image, so look for the listener process through /proc.
+  Match the executable, not the command line: the entrypoint's own arguments contain
+  "Runner.Listener" long before the runner is configured and listening.
+#}
+{% set runner_healthcheck -%}
+for p in /proc/[0-9]*; do [[ $(readlink "$p/exe" 2>/dev/null) == */bin/Runner.Listener ]] && tr "\0" "\n" < "$p/cmdline" 2>/dev/null | grep -qx run && exit 0; done; exit 1
+{%- endset %}
+{% do c1.healthcheck.set_custom_test(["CMD", "bash", "-c", runner_healthcheck]) %}
 
 {% do c1.environment.add_env("RUN_AS_ROOT", "true") %}
 {% do c1.environment.add_env("RUNNER_SCOPE", cfg.scope) %}
@@ -44,6 +51,38 @@
 {% set work_host_path = tpl.funcs.get_host_path(values.storage.work) %}
 {% do c1.add_storage(work_host_path, values.storage.work) %}
 {% do c1.environment.add_env("RUNNER_WORKDIR", work_host_path) %}
+{# The tool cache is mounted into job containers too, so keep it on the same-path storage #}
+{% do c1.environment.add_env("AGENT_TOOLSDIRECTORY", "%s/_tool"|format(work_host_path)) %}
+
+{#
+  The runner also mounts its own externals dir (the Node.js used by JavaScript actions) into
+  job containers, at a path computed from the real location of its binaries. Copy the runner's
+  bin and externals dirs to the same-path storage and symlink them back, so that path exists
+  on the host too. Leftover runner config is removed so a recreated container registers again.
+#}
+{% set runner_setup -%}
+set -e
+src=/actions-runner
+base="$RUNNER_WORKDIR/_runner"
+ver=$("$src/bin/Runner.Listener" --version)
+root="$base/$ver"
+if [ ! -f "$root/.copied" ]; then
+  echo "Copying runner $ver to $root"
+  rm -rf "$root"
+  mkdir -p "$root/bin" "$root/externals"
+  cp -a "$src/bin/." "$root/bin/"
+  cp -a "$src/externals/." "$root/externals/"
+  touch "$root/.copied"
+fi
+find "$base" -mindepth 1 -maxdepth 1 ! -name "$ver" -exec rm -rf {} +
+rm -f "$root/.runner" "$root/.runner_migrated" "$root/.credentials" "$root/.credentials_migrated" "$root/.credentials_rsaparams"
+rm -rf "$src/bin" "$src/externals"
+ln -s "$root/bin" "$src/bin"
+ln -s "$root/externals" "$src/externals"
+exec /entrypoint.sh "$@"
+{%- endset %}
+{% do c1.set_entrypoint(["bash", "-c", runner_setup, "bash"]) %}
+{% do c1.set_command(["./bin/Runner.Listener", "run", "--startuptype", "service"]) %}
 
 {% for store in values.storage.additional_storage %}
   {% do c1.add_storage(store.mount_path, store) %}
